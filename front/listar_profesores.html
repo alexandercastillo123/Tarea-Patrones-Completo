@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Profesores - SENATI</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding-top: 30px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #003366;
+        }
+
+        .form-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            background: #0056b3;
+            color: white;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: #003d80;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+        }
+
+        .btn-edit {
+            background: #ffc107;
+            color: black;
+        }
+
+        /* Buscador */
+        .search-container {
+            margin: 20px 0;
+            text-align: right;
+        }
+
+        #searchInput {
+            width: 250px;
+            border: 2px solid #003366;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #003366;
+            color: white;
+        }
+
+        .back-link {
+            display: block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Volver al Panel</a>
+        <h1>GESTIÓN DE PROFESORES</h1>
+
+        <form id="profesorForm">
+            <input type="hidden" id="id_profesor">
+            <div class="form-group">
+                <input type="text" id="nombre_profesor" placeholder="Nombre completo" required>
+                <input type="text" id="especialidad" placeholder="Especialidad (ej. Software, Mecánica)" required>
+            </div>
+            <button type="submit" class="btn" id="btnSubmit">Registrar Profesor</button>
+            <button type="button" class="btn" onclick="resetForm()" style="background:#6c757d">Limpiar</button>
+        </form>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Buscar profesor..." onkeyup="filterTable()">
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Especialidad</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="listaProfesores">
+                <tr>
+                    <td colspan="4">Cargando profesores...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api/profesores';
+
+        document.addEventListener('DOMContentLoaded', loadProfesores);
+
+        async function loadProfesores() {
+            try {
+                const res = await fetch(API_URL);
+                const result = await res.json();
+                if (result.success) {
+                    const html = result.data.map(p => `
+                        <tr>
+                            <td>${p.id_profesor}</td>
+                            <td>${p.nombre_profesor}</td>
+                            <td>${p.especialidad}</td>
+                            <td>
+                                <button class="btn btn-edit" onclick='editProfesor(${JSON.stringify(p)})'>Editar</button>
+                                <button class="btn btn-delete" onclick="deleteProfesor(${p.id_profesor})">Eliminar</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    document.getElementById('listaProfesores').innerHTML = html || '<tr><td colspan="4">No hay profesores</td></tr>';
+                }
+            } catch (err) {
+                document.getElementById('listaProfesores').innerHTML = `<tr><td colspan="4" style="color:red">Error al cargar.</td></tr>`;
+            }
+        }
+
+        function filterTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const trs = document.getElementById('listaProfesores').getElementsByTagName('tr');
+
+            for (let i = 0; i < trs.length; i++) {
+                const tds = trs[i].getElementsByTagName('td');
+                if (tds.length === 0) continue;
+                let found = false;
+                for (let j = 0; j < tds.length - 1; j++) {
+                    if (tds[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+                trs[i].style.display = found ? "" : "none";
+            }
+        }
+
+        document.getElementById('profesorForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('id_profesor').value;
+            const data = {
+                nombre_profesor: document.getElementById('nombre_profesor').value,
+                especialidad: document.getElementById('especialidad').value
+            };
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_URL}/${id}` : API_URL;
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const resData = await res.json();
+                if (resData.success) {
+                    alert(resData.mensaje);
+                    resetForm();
+                    loadProfesores();
+                } else {
+                    alert('Error: ' + resData.error);
+                }
+            } catch (err) { alert('Error en la petición'); }
+        };
+
+        function editProfesor(p) {
+            document.getElementById('id_profesor').value = p.id_profesor;
+            document.getElementById('nombre_profesor').value = p.nombre_profesor;
+            document.getElementById('especialidad').value = p.especialidad;
+            document.getElementById('btnSubmit').innerText = 'Actualizar Profesor';
+        }
+
+        async function deleteProfesor(id) {
+            if (confirm('¿Eliminar profesor?')) {
+                try {
+                    const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                    const resData = await res.json();
+                    if (resData.success) {
+                        alert(resData.mensaje);
+                        loadProfesores();
+                    }
+                } catch (err) { alert('Error al eliminar'); }
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('profesorForm').reset();
+            document.getElementById('id_profesor').value = '';
+            document.getElementById('btnSubmit').innerText = 'Registrar Profesor';
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Bloques - SENATI</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding-top: 30px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #003366;
+        }
+
+        .form-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input,
+        select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            background: #0056b3;
+            color: white;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: #003d80;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+        }
+
+        .btn-edit {
+            background: #ffc107;
+            color: black;
+        }
+
+        /* Buscador */
+        .search-container {
+            margin: 20px 0;
+            text-align: right;
+        }
+
+        #searchInput {
+            width: 250px;
+            border: 2px solid #003366;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #003366;
+            color: white;
+        }
+
+        .back-link {
+            display: block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Volver al Panel</a>
+        <h1>GESTIÓN DE BLOQUES</h1>
+
+        <form id="bloqueForm">
+            <input type="hidden" id="id_bloque">
+            <div class="form-group">
+                <input type="text" id="nombre_bloque" placeholder="Nombre del Bloque (ej. B-101)" required>
+                <select id="id_profesor" required>
+                    <option value="">Cargando tutores...</option>
+                </select>
+            </div>
+            <button type="submit" class="btn" id="btnSubmit">Registrar Bloque</button>
+            <button type="button" class="btn" onclick="resetForm()" style="background:#6c757d">Limpiar</button>
+        </form>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Buscar bloque..." onkeyup="filterTable()">
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Bloque</th>
+                    <th>Profesor Tutor (ID)</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="listaBloques">
+                <tr>
+                    <td colspan="4">Cargando bloques...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadBloques();
+            loadSelects();
+        });
+
+        async function loadSelects() {
+            try {
+                const res = await fetch(`${API_URL}/profesores`);
+                const result = await res.json();
+                if (result.success) {
+                    document.getElementById('id_profesor').innerHTML = '<option value="">Seleccione Tutor</option>' +
+                        result.data.map(p => `<option value="${p.id_profesor}">${p.nombre_profesor}</option>`).join('');
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadBloques() {
+            try {
+                const res = await fetch(`${API_URL}/bloques`);
+                const result = await res.json();
+                if (result.success) {
+                    const html = result.data.map(b => `
+                        <tr>
+                            <td>${b.id_bloque}</td>
+                            <td>${b.nombre_bloque}</td>
+                            <td>${b.id_profesor}</td>
+                            <td>
+                                <button class="btn btn-edit" onclick='editBloque(${JSON.stringify(b)})'>Editar</button>
+                                <button class="btn btn-delete" onclick="deleteBloque(${b.id_bloque})">Eliminar</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    document.getElementById('listaBloques').innerHTML = html || '<tr><td colspan="4">No hay bloques</td></tr>';
+                }
+            } catch (err) {
+                document.getElementById('listaBloques').innerHTML = `<tr><td colspan="4" style="color:red">Error al cargar.</td></tr>`;
+            }
+        }
+
+        function filterTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const trs = document.getElementById('listaBloques').getElementsByTagName('tr');
+
+            for (let i = 0; i < trs.length; i++) {
+                const tds = trs[i].getElementsByTagName('td');
+                if (tds.length === 0) continue;
+                let found = false;
+                for (let j = 0; j < tds.length - 1; j++) {
+                    if (tds[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+                trs[i].style.display = found ? "" : "none";
+            }
+        }
+
+        document.getElementById('bloqueForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('id_bloque').value;
+            const data = {
+                nombre_bloque: document.getElementById('nombre_bloque').value,
+                id_profesor: parseInt(document.getElementById('id_profesor').value)
+            };
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_URL}/bloques/${id}` : `${API_URL}/bloques`;
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const resData = await res.json();
+                if (resData.success) {
+                    alert(resData.mensaje);
+                    resetForm();
+                    loadBloques();
+                } else {
+                    alert('Error: ' + resData.error);
+                }
+            } catch (err) { alert('Error en la petición'); }
+        };
+
+        function editBloque(b) {
+            document.getElementById('id_bloque').value = b.id_bloque;
+            document.getElementById('nombre_bloque').value = b.nombre_bloque;
+            document.getElementById('id_profesor').value = b.id_profesor;
+            document.getElementById('btnSubmit').innerText = 'Actualizar Bloque';
+        }
+
+        async function deleteBloque(id) {
+            if (confirm('¿Eliminar bloque?')) {
+                try {
+                    const res = await fetch(`${API_URL}/bloques/${id}`, { method: 'DELETE' });
+                    const resData = await res.json();
+                    if (resData.success) {
+                        alert(resData.mensaje);
+                        loadBloques();
+                    }
+                } catch (err) { alert('Error al eliminar'); }
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('bloqueForm').reset();
+            document.getElementById('id_bloque').value = '';
+            document.getElementById('btnSubmit').innerText = 'Registrar Bloque';
+        }
+    </script>
+</body>
+
+</html>

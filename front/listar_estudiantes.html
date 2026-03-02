@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Estudiantes - SENATI</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding-top: 30px;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #003366;
+        }
+
+        .form-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        input,
+        select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            background: #0056b3;
+            color: white;
+            transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #003d80;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+        }
+
+        .btn-edit {
+            background: #ffc107;
+            color: black;
+        }
+
+        .btn-view {
+            background: #17a2b8;
+        }
+
+        /* Buscador */
+        .search-container {
+            margin: 20px 0;
+            text-align: right;
+        }
+
+        #searchInput {
+            width: 300px;
+            border: 2px solid #003366;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #003366;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f1f1f1;
+        }
+
+        .back-link {
+            display: block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: #0056b3;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Volver al Panel</a>
+        <h1>GESTIÓN DE ESTUDIANTES</h1>
+
+        <form id="estudianteForm">
+            <input type="hidden" id="id_estudiante">
+            <div class="form-group">
+                <input type="text" id="nombre" placeholder="Nombre" required>
+                <input type="text" id="apellido" placeholder="Apellido" required>
+                <input type="text" id="dni" placeholder="DNI" required>
+                <input type="number" id="edad" placeholder="Edad" required>
+                <select id="id_carrera" required>
+                    <option value="">Cargando carreras...</option>
+                </select>
+                <select id="id_bloque" required>
+                    <option value="">Cargando bloques...</option>
+                </select>
+            </div>
+            <button type="submit" class="btn" id="btnSubmit">Registrar Estudiante</button>
+            <button type="button" class="btn" onclick="resetForm()" style="background:#6c757d">Limpiar</button>
+        </form>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Buscar estudiante (ID, Nombre, DNI...)"
+                onkeyup="filterTable()">
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre y Apellido</th>
+                    <th>DNI</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="listaEstudiantes">
+                <tr>
+                    <td colspan="4">Cargando datos...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadEstudiantes();
+            loadSelects();
+        });
+
+        async function loadSelects() {
+            try {
+                const [resB, resC] = await Promise.all([
+                    fetch(`${API_URL}/bloques`),
+                    fetch(`${API_URL}/carreras`)
+                ]);
+
+                const bloques = await resB.json();
+                const carreras = await resC.json();
+
+                if (bloques.success) {
+                    document.getElementById('id_bloque').innerHTML = '<option value="">Seleccione Bloque</option>' +
+                        bloques.data.map(b => `<option value="${b.id_bloque}">${b.nombre_bloque}</option>`).join('');
+                }
+                if (carreras.success) {
+                    document.getElementById('id_carrera').innerHTML = '<option value="">Seleccione Carrera</option>' +
+                        carreras.data.map(c => `<option value="${c.id_carrera}">${c.nombre_carrera}</option>`).join('');
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadEstudiantes() {
+            try {
+                const res = await fetch(`${API_URL}/estudiantes`);
+                const result = await res.json();
+                if (result.success) {
+                    const html = result.data.map(est => `
+                        <tr>
+                            <td>${est.id_estudiante}</td>
+                            <td>${est.nombre_estudiante} ${est.apellido_estudiante}</td>
+                            <td>${est.dni_estudiante}</td>
+                            <td>
+                                <a href="detalle_estudiante.html?id=${est.id_estudiante}" class="btn btn-view">Ver Detalles</a>
+                                <button class="btn btn-edit" onclick='editEstudiante(${JSON.stringify(est)})'>Editar</button>
+                                <button class="btn btn-delete" onclick="deleteEstudiante(${est.id_estudiante})">Eliminar</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    document.getElementById('listaEstudiantes').innerHTML = html || '<tr><td colspan="4">No hay estudiantes</td></tr>';
+                }
+            } catch (err) {
+                document.getElementById('listaEstudiantes').innerHTML = `<tr><td colspan="4" style="color:red">Error al cargar.</td></tr>`;
+            }
+        }
+
+        function filterTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const trs = document.getElementById('listaEstudiantes').getElementsByTagName('tr');
+
+            for (let i = 0; i < trs.length; i++) {
+                const tds = trs[i].getElementsByTagName('td');
+                let found = false;
+                for (let j = 0; j < tds.length - 1; j++) { // Excluir columna acciones
+                    if (tds[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+                trs[i].style.display = found ? "" : "none";
+            }
+        }
+
+        document.getElementById('estudianteForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('id_estudiante').value;
+            const data = {
+                nombre_estudiante: document.getElementById('nombre').value,
+                apellido_estudiante: document.getElementById('apellido').value,
+                dni_estudiante: document.getElementById('dni').value,
+                edad_estudiante: parseInt(document.getElementById('edad').value),
+                id_carrera: parseInt(document.getElementById('id_carrera').value),
+                id_bloque: parseInt(document.getElementById('id_bloque').value)
+            };
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_URL}/estudiantes/${id}` : `${API_URL}/estudiantes`;
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const resData = await res.json();
+                if (resData.success) {
+                    alert(resData.mensaje);
+                    resetForm();
+                    loadEstudiantes();
+                } else {
+                    alert('Error: ' + resData.error);
+                }
+            } catch (err) { alert('Error en la petición'); }
+        };
+
+        function editEstudiante(est) {
+            document.getElementById('id_estudiante').value = est.id_estudiante;
+            document.getElementById('nombre').value = est.nombre_estudiante;
+            document.getElementById('apellido').value = est.apellido_estudiante;
+            document.getElementById('dni').value = est.dni_estudiante;
+            document.getElementById('edad').value = est.edad_estudiante;
+            document.getElementById('id_carrera').value = est.id_carrera;
+            document.getElementById('id_bloque').value = est.id_bloque;
+            document.getElementById('btnSubmit').innerText = 'Actualizar Estudiante';
+        }
+
+        async function deleteEstudiante(id) {
+            if (confirm('¿Seguro que deseas eliminar este estudiante?')) {
+                try {
+                    const res = await fetch(`${API_URL}/estudiantes/${id}`, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (data.success) {
+                        alert(data.mensaje);
+                        loadEstudiantes();
+                    }
+                } catch (err) { alert('Error al eliminar'); }
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('estudianteForm').reset();
+            document.getElementById('id_estudiante').value = '';
+            document.getElementById('btnSubmit').innerText = 'Registrar Estudiante';
+        }
+    </script>
+</body>
+
+</html>
