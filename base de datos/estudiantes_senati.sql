@@ -2,6 +2,13 @@ drop database if exists estudiantes_senatinos;
 create database if not exists estudiantes_senatinos;
 use estudiantes_senatinos;
 
+create table login_usuario(
+    id_usuario init primary key auto_increment,
+    nombre_usuario varchar(100) not null,
+    email varchar(50) not null unique,
+    pass varchar(225) not null
+)
+
 create table profesores(
     id_profesor int primary key auto_increment,
     nombre_profesor varchar(100) not null,

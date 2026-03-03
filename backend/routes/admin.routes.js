@@ -10,6 +10,13 @@ console.log('Ruta /api/carreras registrada');
 // Ruta para listar carreras
 router.get('/carreras', controller.listarCarreras);
 
+// Ruta pare Cuenta (CRUD completo)
+router.post('/usuario', controller.crearUsuario);
+router.get('/usuario/:id', controller.detalleUsuario);
+router.put('/usuario/:id', controller.actualizarUsuario);
+router.delete('/usuario/:id', controller.eliminarUsuario);
+router.delete('/usuario/:id/validacion', controller.validacionUsuario)
+
 // Rutas para Estudiantes (CRUD completo)
 router.post('/estudiantes', controller.crearEstudiante);
 router.get('/estudiantes', controller.listarEstudiantes);

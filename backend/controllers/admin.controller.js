@@ -20,6 +20,7 @@ const EliminarBloqueCommand = require('../commands/EliminarBloqueCommand');
 const RegistrarNotaCommand = require('../commands/RegistrarNotaCommand');
 
 const adminService = require('../services/admin.service');
+const CrearCuentaCommand = require('../commands/CrearUsuarioCommand');
 
 class AdminController {
 
@@ -46,12 +47,43 @@ class AdminController {
             res.status(400).json({ success: false, error: error.message });
         }
     }
+    
+    async actualizarUsuario(req, res) {
+        try {
+            const command = new EditarUsuarioCommand(req.params.id, req.body);
+            await command.execute();
+            res.json({ success: true, mensaje: 'Usuario actualizado correctamente' });
+        } catch (error) {
+            res.status(400).json({ success: false, error: error.message });
+        }
+    }
 
     async eliminarEstudiante(req, res) {
         try {
             const command = new EliminarEstudianteCommand(req.params.id);
             await command.execute();
             res.json({ success: true, mensaje: 'Estudiante eliminado correctamente' });
+        } catch (error) {
+            res.status(400).json({ success: false, error: error.message });
+        }
+    }
+
+    async eliminarUsuario(req, res) {
+        try {
+            const command = new EliminarUsuarioCommand(req.params.id);
+            await command.execute();
+            res.json({ success: true, mensaje: 'Usuario eliminado correctamente' });
+        } catch (error) {
+            res.status(400).json({ success: false, error: error.message });
+        }
+    }
+
+//// falta culminar aqui la validacion q la cuenta coincide con el correo y todo lo demas
+    async validacionUsuario(req, res) {
+        try {
+            const command = new EliminarUsuarioCommand(req.params.id);
+            await command.execute();
+            res.json({ success: true, mensaje: 'Usuario eliminado correctamente' });
         } catch (error) {
             res.status(400).json({ success: false, error: error.message });
         }
@@ -75,6 +107,15 @@ class AdminController {
         try {
             const estudiantes = await adminService.listarEstudiantes();
             res.json({ success: true, data: estudiantes });
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+
+    async detalleUsuario(req, res) {
+        try {
+            const usuario = await adminService.detalleUsuario();
+            res.json({ success: true, data: usuario });
         } catch (error) {
             res.status(500).json({ success: false, error: error.message });
         }
@@ -227,6 +268,22 @@ class AdminController {
             res.status(400).json({ success: false, error: error.message });
         }
     }
+    
+    async crearUsuario(req, res) {
+        try {
+            const command = new CrearCuentaCommand(req.body);
+            const id = await command.execute();
+            res.status(201).json({
+                success: true,
+                id_usuario: id,
+                mensaje: 'Cuenta creado correctamente'
+            });
+        } catch (error) {
+            res.status(400).json({ success: false, error: error.message });
+        }
+    }
+
+
 
 }
 

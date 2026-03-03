@@ -20,6 +20,15 @@ class AdminRepository {
         return result.insertId;
     }
 
+    //crear cuenta
+    async crearCuenta(nombre_usuario, email,pass) {
+        const [result] = await this.pool.query(
+            'INSERT INTO profesores (nombre_usuario, email, pass) VALUES (?, ?, ?)',
+            [nombre_usuario, email, pass]
+        );
+        return result.insertId;
+    }
+
     async editarProfesor(id_profesor, nombre, especialidad) {
         const [result] = await this.pool.query(
             'UPDATE profesores SET nombre_profesor = ?, especialidad = ? WHERE id_profesor = ?',
@@ -45,6 +54,15 @@ class AdminRepository {
         const [rows] = await this.pool.query(
             'SELECT id_profesor FROM profesores WHERE nombre_profesor = ?',
             [nombre]
+        );
+        return rows.length > 0;
+    }
+
+    // chequear que ya existe la cuenta
+    async checkCuentaExsitente(email) {
+        const [ rows ] = await this.pool.query(
+            'SELECT id_usuario from  login_usuario WHERE email = ?',
+            [email]
         );
         return rows.length > 0;
     }

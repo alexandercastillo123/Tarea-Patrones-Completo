@@ -24,6 +24,11 @@ class AdminService {
     }
 
     // Estudiante - Listar
+    async detalleUsuario() {
+        return await repo.detalleUsuario();
+    }
+
+    // cuenta - detalle
     async listarEstudiantes() {
         return await repo.listarEstudiantes();
     }
@@ -38,6 +43,17 @@ class AdminService {
             throw new Error('Ya existe un profesor con este nombre');
         }
         return await repo.crearProfesor(data.nombre_profesor, data.especialidad);
+    }
+
+    async crearCuenta(data){
+        if (!data.nombre_usuario || !data.email || !data.pass) {
+            throw new Error('porfavor rellene todos los campos');
+        }
+        const existe = await repo.checkCuentaExsitente(data.email);
+        if (existe) {
+            throw new Error('Ya existe una cuenta con este correo');
+        }
+        return await repo.crearCuenta(data.nombre_usuario, data.email, data.pass);
     }
 
     // Profesor - Editar
