@@ -1,11 +1,12 @@
 class CrearProfesorCommand {
-    constructor(data) {
+    constructor(data, usuario) {
         this.data = data;
+        this.usuario = usuario;
     }
 
     async execute() {
         const service = require('../services/admin.service');
-        const idProfesor = await service.crearProfesor(this.data);
+        const idProfesor = await service.crearProfesor(this.data, this.usuario);
         return { id_profesor: idProfesor, mensaje: 'Profesor creado correctamente' };
     }
 }

@@ -1,73 +1,55 @@
-# Sistema de Gestion Academica - SENATI
+# Sistema de Gestion Academica - SHENATI
 
-Este proyecto es un sistema de gestion para SENATI que permite administrar estudiantes, profesores, cursos, bloques y calificaciones. Fue desarrollado siguiendo patrones de diseño de software para que el codigo sea ordenado y facil de mantener.
+Este es el proyecto CRUD que se le implemento el el Dashboard con graficos y el historial de actividades orrientado al manejo de gestion de SHENATI xd.
 
-## Estructura del Proyecto
+## Componentes del Proyecto
 
-El proyecto se divide en tres partes principales:
-
-1.  **Backend**: Hecho con Node.js y Express. Aqui esta toda la logica, las validaciones y la conexion a la base de datos.
-2.  **Frontend**: Hecho con HTML y CSS. Es la interfaz que usa el usuario para interactuar con el sistema.
-3.  **Base de Datos**: Usa MySQL para guardar toda la informacion de manera permanente.
+1.  **Backend**: Hecho con Node.js y Express. Aqui esta toda la logica y la conexion a la base de datos.
+2.  **Frontend**: Hecho con React y Vite + TailwindCSS. Es la parte visual donde se gestiona todo.
+3.  **Base de Datos**: MySQL para guardar toda la info de forma segura.
 
 ---
 
-## Tecnologias Usadas
+## Como correr el proyecto en otro dispositivo
 
-- **Node.js**: Entorno de ejecucion para el servidor.
-- **Express**: Framework para crear las rutas de la API de forma rapida.
-- **MySQL**: Base de datos relacional.
-- **Cors**: Para permitir que el frontend se comunique con el backend sin problemas.
-- **Javascript**: Usado tanto en el servidor como en la logica del cliente.
-
----
-
-## Organizacion de Carpetas (Backend)
-
-- **config/**: Contiene la configuracion de la conexion a la base de datos (db.js).
-- **repositories/**: Aqui es donde se hacen las consultas directas (SQL) a la base de datos. Se usa el patron Singleton para que solo haya una instancia de conexion.
-- **services/**: Es la capa intermedia. Recibe los datos, los valida y llama al repositorio. Aqui se usa el patron Facade.
-- **commands/**: Cada accion de escribir (crear, editar, eliminar) tiene su propia clase aqui. Esto sigue el patron Command.
-- **controllers/**: Recibe las peticiones de la web (req) y envia las respuestas (res).
-- **routes/**: Define que URL corresponde a cada funcion del controlador.
+1. **Clonar el proyecto**.
+2. **Instalar dependencias**:
+   - Abre una terminal en `backend` y corre: `npm install`
+   - Abre otra terminal en `front/SHENATI` y corre: `npm install`
+3. **Base de Datos**: Importa el archivo `estudiantes_senati.sql` (esta en la carpeta "base de datos") en tu MySQL.
+4. **Ejecutar**:
+   - Terminal 1 (Backend): `node app.js`
+   - Terminal 2 (Frontend): `npm run dev`
 
 ---
 
-## Como Ejecutar el Proyecto
+## Arquitectura y Patrones (Para el Profe)
 
-### 1. Base de Datos
-- Abre tu MySQL (XAMPP, MySQL Workbench, etc.).
-- Crea una base de datos llamada `estudiantes_senatinos`.
-- Ejecuta el script SQL que se encuentra en la carpeta `base de datos/estudiantes_senati.sql`.
+El proyecto no es solo codigo suelto, sigue una estructura profesional por capas:
 
-### 2. Backend
-- Abre una terminal en la carpeta `backend`.
-- Instala las librerias necesarias con: `npm install` (si no las tienes).
-- Inicia el servidor con: `node app.js`.
-- El servidor correra en `http://localhost:3000`.
-
-### 3. Frontend
-- Solo tienes que abrir el archivo `index.html` que esta en la carpeta `front` en cualquier navegador.
+- **Estructura Backend**: Rutas -> Controladores -> Comandos -> Servicios -> Repositorios.
+- **Patrones usados**:
+    - **Singleton**: Para que solo haya una conexion a la base de datos y no gastar memoria.
+    - **Command**: Cada accion (crear, editar, borrar) es un objeto separado, asi es mas facil de probar y no se mezcla todo.
+    - **Facade**: El Service centraliza toda la logica para que el Controlador sea sencillo.
 
 ---
 
-## Funciones Principales
+## Pruebas (Tests)
 
-- **Gestion de Estudiantes**: Registro, edicion, eliminacion y busqueda por DNI o nombre.
-- **Gestion de Profesores**: Registro de docentes y su especialidad.
-- **Gestion de Cursos y Bloques**: Organizacion por carreras y aulas.
-- **Registro de Notas**: Permite poner notas a los alumnos y ver su historial completo en un expediente.
-- **Validaciones**: El sistema no permite crear DNI repetidos, nombres de bloques iguales o poner dos notas al mismo alumno en el mismo curso.
+Se uso TDD con Jest y Supertest. Para correr las pruebas y ver que todo este bien, ve a la carpeta `backend` y pon:
+`npm test`
 
----
-
-## Patrones de Diseño Aplicados
-
-Para cumplir con la tarea, se aplicaron estos tres patrones:
-- **Singleton**: En el repositorio, para no abrir muchas conexiones a la vez.
-- **Facade (Fachada)**: En los servicios, para que el controlador no sepa como funciona la base de datos por dentro.
-- **Command (Comando)**: Cada operacion importante es un objeto separado, lo que hace el codigo mas limpio.
+Actualmente hay 66 tests pasando que cubren todos los endpoints de la API.
 
 ---
 
-Proyecto desarrollado para la tarea de Patrones de Diseño.
+## Graficos y Dashboard
+
+El Dashboard saca la info de `/api/dashboard/stats`. Se usa la libreria Recharts para mostrar de forma visual:
+- Alumnos por carrera.
+- Cuantos se inscriben por dia.
+- El historial de quien hizo que cosa en el sistema.
+
+---
+Entregable - Alexander Peralta.
