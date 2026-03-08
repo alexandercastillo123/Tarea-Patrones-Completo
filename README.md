@@ -51,4 +51,4 @@ El Dashboard saca la info de `/api/dashboard/stats`. Se usa la libreria Recharts
 - Cuantos se inscriben por dia.
 - El historial de quien hizo que cosa en el sistema.
 
-Entregable - Alexander Peralta.
+Entregable - Alexander Peralta Castillo.
